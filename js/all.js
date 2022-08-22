@@ -9,13 +9,6 @@ function SortItem(ToDoItemList) {
     return ToDoItemList.length;
 }
 
-function removeItem(RemoveItemIndex, ToDoItemList) {
-    console.log(ToDoItemList);
-    console.log(RemoveItemIndex);
-    ToDoItemList.splice(RemoveItemIndex, 1);
-    return ToDoItemList;
-}
-
 function App() {
     const [ToDoItem, setToDoItem] = useState([]);
     const [NewItem, setNewItem] = useState('');
@@ -27,13 +20,11 @@ function App() {
             <div className="conatiner todoListPage vhContainer">
                 <div className="todoList_Content">
                     <div className="inputBox">
-                        <input type="text" placeholder="請輸入代辦事項" onChange={(e) => {
-                            if (e.target.value) setNewItem(e.target.value);
+                        <input type="text" placeholder="請輸入待辦事項" onChange={(e) => {
+                            setNewItem(e.target.value);
                         }} />
                         <a href="#" onClick={() => {
-                            let nextIndex = SortItem(ToDoItem);
-                            console.log(nextIndex);
-                            setToDoItem([...ToDoItem, { item: NewItem, complete: false, index: nextIndex }]);
+                            if (NewItem) setToDoItem([...ToDoItem, { item: NewItem, complete: false, index: SortItem(ToDoItem) }]);
                         }}>
                             <i className="fa fa-plus"></i>
                         </a>
@@ -48,7 +39,6 @@ function App() {
                             <ul className="todoList_item">
                                 {
                                     ToDoItem.map((item, i) => {
-                                        SortItem(ToDoItem);
                                         return (
                                             <li key={i}>
                                                 <label className="todoList_label">
@@ -56,6 +46,7 @@ function App() {
                                                     <span>{item.item}</span>
                                                 </label>
                                                 <a href="#" onClick={() => {
+                                                    SortItem(ToDoItem);
                                                     setToDoItem(ToDoItem.filter(item => item.index !== i));
                                                 }}>
                                                     <i className="fa fa-times"></i>
