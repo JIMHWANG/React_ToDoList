@@ -1,5 +1,5 @@
 const todoListPage = ReactDOM.createRoot(document.getElementById('todoListPage'));
-const { useState } = React;
+const { useState, useEffect } = React;
 
 function SortItem(ToDoItemList) {
     if (ToDoItemList.length === 0) return 0;
@@ -20,30 +20,62 @@ function RemoveOneOrAllItem(ToDoItem, Index, setToDoItem) {
     return ToDoItem;
 }
 
-function ToDoListItem({ ToDoItem, setToDoItem, CompleteItemNum, setCompleteItemNum }) {
+function ToDoListItem({ ToDoItem, setToDoItem, setCompleteItemNum, CurrentStatus }) {
     return (
         <ul className="todoList_item">
             {
                 ToDoItem.map((item, i) => {
+                    if ((item.complete === CurrentStatus && CurrentStatus !== "ALL") || (CurrentStatus === "ALL")) {
+                        return (
+                            <li key={i}>
+                                <label className="todoList_label">
+                                    <input type="checkbox" className="todoList_input" checked={item.complete} onChange={() => {
+                                        item.complete = !item.complete;
+                                        // setToDoItem(ToDoItem);
+                                        setToDoItem(JSON.parse(JSON.stringify(ToDoItem)));
+                                    }} />
+                                    <span>{item.item}</span>
+                                </label>
+                                <a href="#" onClick={() => {
+                                    RemoveOneOrAllItem(ToDoItem, i, setToDoItem);
+                                }}>
+                                    <i className="fa fa-times"></i>
+                                </a>
+                            </li>
+                        )
+                    }
+                })
+            }
+        </ul>
+    )
+}
+
+function CompleteStatusList({ setCurrentStatus }) {
+    let statusActive;
+    let status;
+    const [CompleteStatus, setCompleteStatus] = useState([{ status: "全部", active: true }, { status: "待完成", active: false }, { status: "已完成", active: false }]);
+    return (
+        <ul className="todoList_tab">
+            {
+                CompleteStatus.map((EachStatus, i) => {
+                    EachStatus.active ? statusActive = "active" : statusActive = "NotActive"
                     return (
-                        <li key={i}>
-                            <label className="todoList_label">
-                                <input type="checkbox" className="todoList_input" checked={item.complete} onChange={() => {
-                                    item.complete = !item.complete;
-                                    setToDoItem(ToDoItem);
-                                    setCompleteItemNum(ToDoItem.filter(Item => Item.complete === true).length);
-                                }} />
-                                <span>{item.item}</span>
-                            </label>
-                            <a href="#" onClick={() => {
-                                setCompleteItemNum(RemoveOneOrAllItem(ToDoItem, i, setToDoItem).filter(Item => Item.complete === true).length);
-                            }}>
-                                <i className="fa fa-times"></i>
-                            </a>
+                        <li key={i} >
+                            <a href="#" className={statusActive} onClick={() => {
+                                CompleteStatus.forEach((CompleteStatusElement, CompleteStatusIndex) => {
+                                    CompleteStatusIndex === i ? CompleteStatusElement.active = true : CompleteStatusElement.active = false;
+                                });
+                                EachStatus.status === "全部" ? status = "ALL" : EachStatus.status === "已完成" ? status = true : status = false
+                                setCurrentStatus(status);
+                                // setCompleteStatus(CompleteStatus); // Why 這裡不會觸發一次 CompleteStatus.map ??                                
+                                setCompleteStatus(JSON.parse(JSON.stringify(CompleteStatus)));
+                            }
+                            }>{EachStatus.status}</a>
                         </li>
                     )
                 })
             }
+
         </ul>
     )
 }
@@ -52,6 +84,12 @@ function App() {
     const [ToDoItem, setToDoItem] = useState([]);
     const [NewItem, setNewItem] = useState('');
     const [CompleteItemNum, setCompleteItemNum] = useState(0);
+    const [CurrentStatus, setCurrentStatus] = useState('ALL');
+    let DisplayActive = true;
+    ToDoItem.length === 0 ? DisplayActive = true : DisplayActive = false;
+    useEffect(() => {
+        setCompleteItemNum(ToDoItem.filter(Item => Item.complete === false).length);
+    }, [ToDoItem]);
     return (
         <div>
             <nav>
@@ -71,17 +109,14 @@ function App() {
                         </a>
                     </div>
                     <div className="todoList_list">
-                        <ul className="todoList_tab">
-                            <li><a href="#" className="active">全部</a></li>
-                            <li><a href="#">待完成</a></li>
-                            <li><a href="#">已完成</a></li>
-                        </ul>
-                        <div className="todoList_items">
-                            <ToDoListItem ToDoItem={ToDoItem} setToDoItem={setToDoItem} CompleteItemNum={CompleteItemNum} setCompleteItemNum={setCompleteItemNum} />
+                        <CompleteStatusList setCurrentStatus={setCurrentStatus} />
+                        <p className={`NoItemShow ${DisplayActive}DisPlay`}>目前尚無代辦事項</p>
+                        <div className={`todoList_items ${!DisplayActive}DisPlay`}>
+                            <ToDoListItem ToDoItem={ToDoItem} setToDoItem={setToDoItem} setCompleteItemNum={setCompleteItemNum} CurrentStatus={CurrentStatus} />
                             <div className="todoList_statistics">
-                                <p> {CompleteItemNum} 個已完成項目</p>
+                                <p> {CompleteItemNum} 個待完成項目</p>
                                 <a href="#" onClick={() => {
-                                    setCompleteItemNum(RemoveOneOrAllItem(ToDoItem, "ALL", setToDoItem).filter(Item => Item.complete === true).length);
+                                    setCompleteItemNum(RemoveOneOrAllItem(ToDoItem, "ALL", setToDoItem).filter(Item => Item.complete === false).length);
                                 }}>清除已完成項目</a>
                             </div>
                         </div>
